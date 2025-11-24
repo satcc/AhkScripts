@@ -64,10 +64,10 @@ global ID_HELP := 10
 }
 
 ;vi風キー割り当て　(alt+Tabの操作と競合しないようにScanCodeで記述)
-sc023:: SendInput "{Blind}{Left}"   ; 無変換+h → 左
-sc024:: SendInput "{Blind}{Down}"   ; 無変換+j → 下
-sc025:: SendInput "{Blind}{Up}"     ; 無変換+k → 上
-sc026:: SendInput "{Blind}{Right}"  ; 無変換+l → 右
+*sc023:: SendInput "{Blind}{Left}"   ; 無変換+h → 左
+*sc024:: SendInput "{Blind}{Down}"   ; 無変換+j → 下
+*sc025:: SendInput "{Blind}{Up}"     ; 無変換+k → 上
+*sc026:: SendInput "{Blind}{Right}"  ; 無変換+l → 右
 
 ;Home/End/PageUp/PageDownキーを割り当て
 *n:: SendInput("{Blind}{Home}")
