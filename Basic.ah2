@@ -33,7 +33,7 @@ SetTransparent(x) {
 }
 
 ; ホットストリング
-#Hotstring EndChars -()[]{}:;'"/\,.?!`n`s`t EndChars -()[]{}:;'"/\,.?!`n`s`t
+#Hotstring EndChars -()[]{}:;'"/\,.?!`n`s`t
 ; ~day 現在の日付と時刻に置き換え
 ::~day::
 {
@@ -48,26 +48,27 @@ global mouseIsDclick := false
 global mouseMoveCounter := 0
 global mouseStopCounter := 0
 global lastPress := Map()   ; 各キーの前回押下時刻を記録するマップ
-global ID_HELP := 10
+global ID_MOUSE := 10
+global ID_HELP := 11
 
 *F1:: {
     helpText := "
     (LTrim
-    W/E/R    : 左/中/右クリック
-    H/J/K/L  : ←/↓/↑/→
-    N/M/,/.  : Home/End/PageUp/PageDown
-    F2/F3/F4 : 音量ダウン/アップ/ミュート
+    W/E/R         :   左/中/右クリック
+    H/J/K/L       :   ←/↓/↑/→
+    N/M/,/.       :   Home/End/PageUp/PageDown
+    O/I,Shift+I   :   Enter/BS/Del
+    F2/F3/F4      :   音量ミュート/ダウン/アップ
     )"
-    ToolTip helpText, , ,
-        ID_HELP
+    ToolTip(helpText, , , ID_HELP)
     SetTimer () => ToolTip("", , , ID_HELP), -5000 ; 5秒後に消す
 }
 
 ;vi風キー割り当て　(alt+Tabの操作と競合しないようにScanCodeで記述)
-*sc023:: SendInput "{Blind}{Left}"   ; 無変換+h → 左
-*sc024:: SendInput "{Blind}{Down}"   ; 無変換+j → 下
-*sc025:: SendInput "{Blind}{Up}"     ; 無変換+k → 上
-*sc026:: SendInput "{Blind}{Right}"  ; 無変換+l → 右
+*sc023:: SendInput("{Blind}{Left}")   ; 無変換+h → 左
+*sc024:: SendInput("{Blind}{Down}")   ; 無変換+j → 下
+*sc025:: SendInput("{Blind}{Up}")     ; 無変換+k → 上
+*sc026:: SendInput("{Blind}{Right}")  ; 無変換+l → 右
 
 ;Home/End/PageUp/PageDownキーを割り当て
 *n:: SendInput("{Blind}{Home}")
@@ -77,16 +78,32 @@ global ID_HELP := 10
 *a:: SendInput("{Blind}{Home}")
 *s:: SendInput("{Blind}{End}")
 
+; I/Shift+I → Backspace/Del
+i:: SendInput("{Backspace}")
+^i:: SendInput("{Backspace}")
++i:: SendInput("{Del}")
+^+i:: SendInput("^{Del}")
+
+; O → Enter
+*o:: SendInput("{Blind}{Enter}")
+
+; F2,F3,F4 → 音量ミュート,ダウン,アップ切り替え
+F2:: SoundSetMute -1  ; ミュート切り替え
+F3:: SoundSetVolume "-5"  ; 現在の音量から -5%
+F4:: SoundSetVolume "+5"  ; 現在の音量から +5%
+
 ;アプリキーを割り当て
 q::AppsKey
 
+;-------------------------------------------------
+; マウス操作系
 MoveMouseStop() {
     global mouseIsDclick, mouseMoveCounter, mouseStopCounter
     mouseStopCounter := 0
     mouseIsDclick := false
     mouseMoveCounter := 0
     SetTimer MoveMouse, 0
-    ToolTip "", , , 10
+    ToolTip("", , , ID_MOUSE)
 }
 
 MoveMouse() {
@@ -137,7 +154,7 @@ MoveMouse() {
 
     mouseMoveCounter++
     MouseMove move_x, move_y, 0, "R"
-    ToolTip "" step, , , 10
+    ToolTip("" step, , , ID_MOUSE)
     OutputDebug "Counter:" mouseMoveCounter " StopCounter: " mouseStopCounter " MoveMouse: " move_x "," move_y " step:" step
 }
 
@@ -172,7 +189,6 @@ MouseClickDown(key := "", button := "Left") {
     if (lastPress.Has(key)) {
         return
     }
-    lastPress[key] := true
     Click button " Down"
 }
 MouseClickUp(key := "", button := "Left") {
@@ -189,10 +205,12 @@ MouseClickUp(key := "", button := "Left") {
 *r:: MouseClickDown("r", "Right")
 *r Up:: MouseClickUp("r", "Right")
 
-; F2,F3,F4 → 音量下,上、ミュート切り替え
-F2:: SoundSetVolume "-5"  ; 現在の音量から -5%
-F3:: SoundSetVolume "+5"  ; 現在の音量から +5%
-F4:: SoundSetMute -1  ; ミュート切り替え
+; [/] → ホイールアップ/ダウン
+*[:: Send "{Blind}{WheelUp}"
+*]:: Send "{Blind}{WheelDown}"
+
+; マウス操作系
+;-------------------------------------------------
 
 #HotIf ; GetKeyState("vk1D", "P")  ; 無変換キーが押されている間だけ有効
 
