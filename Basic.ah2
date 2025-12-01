@@ -57,7 +57,11 @@ global ID_HELP := 11
     W/E/R         :   左/中/右クリック
     H/J/K/L       :   ←/↓/↑/→
     N/M/,/.       :   Home/End/PageUp/PageDown
-    O/I,Shift+I   :   Enter/BS/Del
+    U             :   Tab
+    O             :   Enter
+    I,Shift+I     :   BS/Del
+    Z             :   Esc
+    Space         :   IME切り替え
     F2/F3/F4      :   音量ミュート/ダウン/アップ
     )"
     ToolTip(helpText, , , ID_HELP)
@@ -78,6 +82,9 @@ global ID_HELP := 11
 *a:: SendInput("{Blind}{Home}")
 *s:: SendInput("{Blind}{End}")
 
+; U → Tab
+*u:: SendInput("{Blind}{Tab}")
+
 ; I/Shift+I → Backspace/Del
 i:: SendInput("{Backspace}")
 ^i:: SendInput("{Backspace}")
@@ -86,6 +93,12 @@ i:: SendInput("{Backspace}")
 
 ; O → Enter
 *o:: SendInput("{Blind}{Enter}")
+
+; Space -> IME切り替え
+Space:: SendInput("{vkF3}")
+
+; Z-> Escape
+z:: SendInput("{Esc}")
 
 ; F2,F3,F4 → 音量ミュート,ダウン,アップ切り替え
 F2:: SoundSetMute -1  ; ミュート切り替え
@@ -189,6 +202,7 @@ MouseClickDown(key := "", button := "Left") {
     if (lastPress.Has(key)) {
         return
     }
+    lastPress[key] := A_TickCount
     Click button " Down"
 }
 MouseClickUp(key := "", button := "Left") {
