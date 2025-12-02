@@ -56,7 +56,7 @@ global ID_HELP := 11
     (LTrim
     W/E/R         :   左/中/右クリック
     H/J/K/L       :   ←/↓/↑/→
-    N/M/,/.       :   Home/End/PageUp/PageDown
+    N/M/,/.       :   Home/PageDown/PageUp/End
     U             :   Tab
     O             :   Enter
     I,Shift+I     :   BS/Del
@@ -76,9 +76,9 @@ global ID_HELP := 11
 
 ;Home/End/PageUp/PageDownキーを割り当て
 *n:: SendInput("{Blind}{Home}")
-*m:: SendInput("{Blind}{End}")
+*m:: SendInput("{Blind}{PgDn}")
 *,:: SendInput("{Blind}{PgUp}")
-*.:: SendInput("{Blind}{PgDn}")
+*.:: SendInput("{Blind}{End}")
 *a:: SendInput("{Blind}{Home}")
 *s:: SendInput("{Blind}{End}")
 
