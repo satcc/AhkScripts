@@ -50,6 +50,71 @@ global mouseStopCounter := 0
 global lastPress := Map()   ; 各キーの前回押下時刻を記録するマップ
 global ID_MOUSE := 10
 global ID_HELP := 11
+global ID_IME := 12
+
+; IMEの状態を取得する関数（改善版）
+GetIMEState() {
+    ; アクティブウィンドウのハンドルを取得
+    hwnd := WinGetID("A")
+    if (!hwnd) {
+        return 0
+    }
+
+    ; デフォルトIMEウィンドウを取得
+    DefaultIMEWnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
+
+    ; IMEウィンドウが取得できない場合は0を返す
+    if (!DefaultIMEWnd) {
+        OutputDebug("GetIMEState: DefaultIMEWnd is null")
+        return 0
+    }
+
+    ; IME状態を取得（try-catchでエラーハンドリング）
+    try {
+        ; WM_IME_CONTROL (0x283), IMC_GETOPENSTATUS (0x005)
+        result := SendMessage(0x283, 0x005, 0, , DefaultIMEWnd)
+        OutputDebug("GetIMEState: hwnd=" . hwnd . " DefaultIMEWnd=" . DefaultIMEWnd . " result=" . result)
+        return result
+    } catch as err {
+        ; エラーが発生した場合は0を返す
+        OutputDebug("GetIMEState Error: " . err.Message)
+        return 0
+    }
+}
+
+; 前回のIME状態を保持（トグル判定用）
+global lastIMEState := 0
+
+; キャレット位置を取得してToolTipを表示（切り替え前の状態を受け取る）
+ShowIMEToolTip(beforeState) {
+    global ID_IME
+
+    ; キャレット位置を取得
+    try {
+        CaretGetPos(&x, &y)
+        ; キャレットの少し下に表示
+        tipX := x
+        tipY := y + 20
+    } catch {
+        ; キャレット位置が取得できない場合はマウス位置を使用
+        MouseGetPos(&tipX, &tipY)
+        tipY += 20
+    }
+
+    ; 切り替え後の状態は、切り替え前の状態の反転
+    afterState := !beforeState
+
+    ; デバッグ用：状態をOutputDebugで出力
+    OutputDebug("IME Before: " . beforeState . " After: " . afterState)
+
+    ; IMEがON（日本語モード）なら「あ」、OFF（英語モード）なら「A」
+    tipText := afterState ? "あ" : "A"
+
+    ; ToolTipを表示
+    ToolTip(tipText, tipX, tipY, ID_IME)
+    ; 1秒後に消す
+    SetTimer(() => ToolTip("", , , ID_IME), -1000)
+}
 
 *F1:: {
     helpText := "
@@ -95,7 +160,14 @@ i:: SendInput("{Backspace}")
 *o:: SendInput("{Blind}{Enter}")
 
 ; Space -> IME切り替え
-Space:: SendInput("{vkF3}")
+Space:: {
+    ; 切り替え前のIME状態を取得
+    beforeState := GetIMEState()
+    ; IMEを切り替え
+    SendInput("{vkF3}")
+    ; ToolTipを表示（切り替え前の状態を渡す）
+    ShowIMEToolTip(beforeState)
+}
 
 ; Z-> Escape
 z:: SendInput("{Esc}")
