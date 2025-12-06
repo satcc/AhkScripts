@@ -314,3 +314,83 @@ MouseClickUp(key := "", button := "Left") {
 *sc025:: Send "{Blind}{Up}"     ; k
 *sc026:: Send "{Blind}{Right}"  ; l
 #HotIf
+
+;-----------------------------------------------------------------
+; 変換キー(vk1C) + キー で記号入力
+;-----------------------------------------------------------------
+#HotIf GetKeyState("vk1C", "P")
+
+*F1:: {
+    helpText := "
+    (LTrim
+    J             :   + , =
+    K             :   - , _
+    U             :   / , \
+    I             :   * , |
+    N             :   { , [
+    M             :   } , ]
+    )"
+    ToolTip(helpText, , , ID_HELP)
+    SetTimer () => ToolTip("", , , ID_HELP), -5000 ; 5秒後に消す
+}
+
+; J/Shift+J -> +/=
+*sc024:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}=")
+    else
+        SendInput("{Blind}{Text}+")
+}
+
+; K/Shift+K -> -/_
+*sc025:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}_")
+    else
+        SendInput("{Blind}{Text}-")
+}
+
+; U/Shift+U -> /,\
+*u:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}\")
+    else
+        SendInput("{Blind}{Text}/")
+}
+
+; I/Shift+I -> */|
+*i:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}|")
+    else
+        SendInput("{Blind}{Text}*")
+}
+
+; n/Shift+n -> [/{
+*n:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}{")
+    else
+        SendInput("{Blind}{Text}[")
+}
+
+; m/Shift+m -> ]/}
+*m:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text}}")
+    else
+        SendInput("{Blind}{Text}]")
+}
+
+#HotIf
+
+;-----------------------------------------------------------------
+; 変換換キー(vk1C)の制御
+; 単独押下は無効、ダブルクリックで変換キーとして機能
+;-----------------------------------------------------------------
+vk1C:: {
+    KeyWait "vk1C"
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 300) {
+        Send "{vk1C}"
+    }
+}
