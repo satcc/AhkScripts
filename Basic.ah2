@@ -323,6 +323,7 @@ MouseClickUp(key := "", button := "Left") {
 *F1:: {
     helpText := "
     (LTrim
+    H             :   ; , :
     J             :   + , =
     K             :   - , _
     U             :   / , \
@@ -332,6 +333,14 @@ MouseClickUp(key := "", button := "Left") {
     )"
     ToolTip(helpText, , , ID_HELP)
     SetTimer () => ToolTip("", , , ID_HELP), -5000 ; 5秒後に消す
+}
+
+; H/Shift+H -> ;/:
+*sc024:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{Text};")
+    else
+        SendInput("{Blind}{Text}:")
 }
 
 ; J/Shift+J -> +/=
