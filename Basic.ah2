@@ -336,11 +336,11 @@ MouseClickUp(key := "", button := "Left") {
 }
 
 ; H/Shift+H -> ;/:
-*sc024:: {
+*sc023:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text};")
-    else
         SendInput("{Blind}{Text}:")
+    else
+        SendInput("{Blind}{Text};")
 }
 
 ; J/Shift+J -> +/=
