@@ -156,6 +156,12 @@ i:: SendInput("{Backspace}")
 +i:: SendInput("{Del}")
 ^+i:: SendInput("^{Del}")
 
+; D/Shift+D → Backspace/Del
+d:: SendInput("{Backspace}")
+^d:: SendInput("{Backspace}")
++d:: SendInput("{Del}")
+^+d:: SendInput("^{Del}")
+
 ; O → Enter
 *o:: SendInput("{Blind}{Enter}")
 
