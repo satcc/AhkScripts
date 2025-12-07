@@ -3,6 +3,7 @@
 #Requires AutoHotkey v2.0
 
 vk1D & Esc:: Reload()
+F13 & Esc:: Reload()
 
 ; # Win, ! Alt, ^ Ctrl, + Shift
 
@@ -41,7 +42,7 @@ SetTransparent(x) {
 }
 
 ;-----------------------------------------------------------------
-#HotIf GetKeyState("vk1D", "P")  ; 無変換キーが押されている間だけ有効
+#HotIf GetKeyState("vk1D", "P") || GetKeyState("F13", "P") ; 無変換キーが押されている間だけ有効
 
 ; 矢印キーでマウス移動
 global mouseIsDclick := false
@@ -324,7 +325,7 @@ MouseClickUp(key := "", button := "Left") {
 ;-----------------------------------------------------------------
 ; 変換キー(vk1C) + キー で記号入力
 ;-----------------------------------------------------------------
-#HotIf GetKeyState("vk1C", "P")
+#HotIf GetKeyState("vk1C", "P") || GetKeyState("F14", "P")
 
 *F1:: {
     helpText := "
@@ -344,33 +345,33 @@ MouseClickUp(key := "", button := "Left") {
 ; H/Shift+H -> ;/:
 *sc023:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}:")
+        SendInput("{Blind}{:}")
     else
-        SendInput("{Blind};")
+        SendInput("{Blind}{;}")
 }
 
 ; J/Shift+J -> +/=
 *sc024:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}=")
+        SendInput("{Blind}{=}")
     else
-        SendInput("{Blind}+")
+        SendInput("{Blind}{+}")
 }
 
 ; K/Shift+K -> -/_
 *sc025:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}_")
+        SendInput("{Blind}{_}")
     else
-        SendInput("{Blind}-")
+        SendInput("{Blind}{-}")
 }
 
 ; U/Shift+U -> /,\
 *u:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}\")
+        SendInput("{Blind}{\}")
     else
-        SendInput("{Blind}/")
+        SendInput("{Blind}{/}")
 }
 
 ; I/Shift+I -> */|
@@ -384,17 +385,17 @@ MouseClickUp(key := "", button := "Left") {
 ; n/Shift+n -> [/{
 *n:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{")
+        SendInput("{Blind}{Text}{")
     else
-        SendInput("{Blind}[")
+        SendInput("{Blind}{Text}[")
 }
 
 ; m/Shift+m -> ]/}
 *m:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}}")
+        SendInput("{Blind}{Text}}")
     else
-        SendInput("{Blind}]")
+        SendInput("{Blind}{Text}]")
 }
 
 #HotIf
