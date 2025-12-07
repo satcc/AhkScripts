@@ -335,6 +335,7 @@ MouseClickUp(key := "", button := "Left") {
     K             :   - , _
     U             :   / , \
     I             :   * , |
+    O             :   ? , ~
     N             :   { , [
     M             :   } , ]
     )"
@@ -345,7 +346,7 @@ MouseClickUp(key := "", button := "Left") {
 ; H/Shift+H -> ;/:
 *sc023:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{:}")
+        SendInput("{Blind}{Text}:")
     else
         SendInput("{Blind}{;}")
 }
@@ -369,7 +370,7 @@ MouseClickUp(key := "", button := "Left") {
 ; U/Shift+U -> /,\
 *u:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{\}")
+        SendInput("{Blind}{Text}\")
     else
         SendInput("{Blind}{/}")
 }
@@ -377,25 +378,33 @@ MouseClickUp(key := "", button := "Left") {
 ; I/Shift+I -> */|
 *i:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}|")
+        SendInput("{Blind}{|}")
     else
-        SendInput("{Blind}*")
+        SendInput("{Blind}{*}")
+}
+
+; O/Shift+O -> ?/~
+*o:: {
+    if GetKeyState("Shift", "P")
+        SendInput("{Blind}{~}")
+    else
+        SendInput("{Blind}{?}")
 }
 
 ; n/Shift+n -> [/{
 *n:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}{")
-    else
         SendInput("{Blind}{Text}[")
+    else
+        SendInput("{Blind}{Text}{")
 }
 
 ; m/Shift+m -> ]/}
 *m:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}}")
-    else
         SendInput("{Blind}{Text}]")
+    else
+        SendInput("{Blind}{Text}}")
 }
 
 #HotIf
@@ -406,6 +415,12 @@ MouseClickUp(key := "", button := "Left") {
 ;-----------------------------------------------------------------
 vk1C:: {
     KeyWait "vk1C"
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 300) {
+        Send "{vk1C}"
+    }
+}
+F14:: {
+    KeyWait "F14"
     if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 300) {
         Send "{vk1C}"
     }

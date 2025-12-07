@@ -11,9 +11,13 @@ Self-made Key Remapping & Utility Scripts using AutoHotkey v2.
 
 ### 1. Key Remapping (Registry Level)
 Windows のレジストリ (`Scancode Map`) を使用して、あまり使わないキーを機能キーとして再割り当てしています。
-*   **無変換 (Muhenkan)** -> **F13**
-*   **変換 (Henkan)** -> **F14**
-*   **CapsLock** -> **F15**
+
+| 変更する物理キー | 元のスキャンコード | 変更後の機能 (新しいキー) | 変更後のスキャンコード |
+| --- | --- | --- | --- |
+| 無変換 | 007B | F13 | 0064 |
+| 変換 | 0079 | F14 | 0065 |
+| Caps Lock | 003A | F15 | 0066 |
+| ひらがな | 0070 | F16 | 0067 |
 
 適用するには `RemapKeys.reg` を実行し、Windows を再起動してください。
 
