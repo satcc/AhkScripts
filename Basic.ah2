@@ -344,57 +344,57 @@ MouseClickUp(key := "", button := "Left") {
 ; H/Shift+H -> ;/:
 *sc023:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}:")
+        SendInput("{Blind}:")
     else
-        SendInput("{Blind}{Text};")
+        SendInput("{Blind};")
 }
 
 ; J/Shift+J -> +/=
 *sc024:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}=")
+        SendInput("{Blind}=")
     else
-        SendInput("{Blind}{Text}+")
+        SendInput("{Blind}+")
 }
 
 ; K/Shift+K -> -/_
 *sc025:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}_")
+        SendInput("{Blind}_")
     else
-        SendInput("{Blind}{Text}-")
+        SendInput("{Blind}-")
 }
 
 ; U/Shift+U -> /,\
 *u:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}\")
+        SendInput("{Blind}\")
     else
-        SendInput("{Blind}{Text}/")
+        SendInput("{Blind}/")
 }
 
 ; I/Shift+I -> */|
 *i:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}|")
+        SendInput("{Blind}|")
     else
-        SendInput("{Blind}{Text}*")
+        SendInput("{Blind}*")
 }
 
 ; n/Shift+n -> [/{
 *n:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}{")
+        SendInput("{Blind}{")
     else
-        SendInput("{Blind}{Text}[")
+        SendInput("{Blind}[")
 }
 
 ; m/Shift+m -> ]/}
 *m:: {
     if GetKeyState("Shift", "P")
-        SendInput("{Blind}{Text}}")
+        SendInput("{Blind}}")
     else
-        SendInput("{Blind}{Text}]")
+        SendInput("{Blind}]")
 }
 
 #HotIf
