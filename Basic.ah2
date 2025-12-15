@@ -55,18 +55,38 @@ global ID_IME := 12
 
 ; IMEの状態を取得する関数（改善版）
 GetIMEState() {
+    ; 現在のDetectHiddenWindows設定を保存し、Trueにする（IMEウィンドウ操作に必要）
+    dhw := A_DetectHiddenWindows
+    DetectHiddenWindows(true)
+
     ; アクティブウィンドウのハンドルを取得
     hwnd := WinGetID("A")
     if (!hwnd) {
+        DetectHiddenWindows(dhw)
         return 0
+    }
+
+    ; 本当にフォーカスを持っているウィンドウ（コントロール）を取得する
+    ; これを行わないと、メモ帳(Win11)などで正しいIME状態が取れない場合がある
+    cbSize := 24 + 6 * A_PtrSize
+    gti := Buffer(cbSize, 0)
+    NumPut("UInt", cbSize, gti, 0)
+
+    ; GetGUIThreadInfo(0, &gti)
+    if DllCall("GetGUIThreadInfo", "UInt", 0, "Ptr", gti.Ptr) {
+        hwndFocus := NumGet(gti, 8 + A_PtrSize, "Ptr") ; hwndFocusオフセット
+        if (hwndFocus) {
+            hwnd := hwndFocus
+        }
     }
 
     ; デフォルトIMEウィンドウを取得
     DefaultIMEWnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
 
-    ; IMEウィンドウが取得できない場合は0を返す
+    ; IMEウィンドウが取得できない場合は、元の設定に戻して0を返す
     if (!DefaultIMEWnd) {
         OutputDebug("GetIMEState: DefaultIMEWnd is null")
+        DetectHiddenWindows(dhw)
         return 0
     }
 
@@ -75,10 +95,12 @@ GetIMEState() {
         ; WM_IME_CONTROL (0x283), IMC_GETOPENSTATUS (0x005)
         result := SendMessage(0x283, 0x005, 0, , DefaultIMEWnd)
         OutputDebug("GetIMEState: hwnd=" . hwnd . " DefaultIMEWnd=" . DefaultIMEWnd . " result=" . result)
+        DetectHiddenWindows(dhw)
         return result
     } catch as err {
-        ; エラーが発生した場合は0を返す
+        ; エラーが発生した場合
         OutputDebug("GetIMEState Error: " . err.Message)
+        DetectHiddenWindows(dhw)
         return 0
     }
 }
@@ -117,6 +139,20 @@ ShowIMEToolTip(beforeState) {
     SetTimer(() => ToolTip("", , , ID_IME), -1000)
 }
 
+SetIMEState(state) {
+    hwnd := WinGetID("A")
+    if (!hwnd) {
+        return
+    }
+    DefaultIMEWnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
+    if (!DefaultIMEWnd) {
+        return
+    }
+    try {
+        SendMessage(0x283, 0x006, state, , DefaultIMEWnd)
+    }
+}
+
 *F1:: {
     helpText := "
     (LTrim
@@ -153,13 +189,13 @@ ShowIMEToolTip(beforeState) {
 
 ; I/Shift+I → Backspace/Del
 i:: SendInput("{Backspace}")
-^i:: SendInput("{Backspace}")
+^i:: SendInput("^{Backspace}")
 +i:: SendInput("{Del}")
 ^+i:: SendInput("^{Del}")
 
 ; D/Shift+D → Backspace/Del
 d:: SendInput("{Backspace}")
-^d:: SendInput("{Backspace}")
+^d:: SendInput("^{Backspace}")
 +d:: SendInput("{Del}")
 ^+d:: SendInput("^{Del}")
 
@@ -307,13 +343,6 @@ MouseClickUp(key := "", button := "Left") {
 
 #HotIf ; GetKeyState("vk1D", "P")  ; 無変換キーが押されている間だけ有効
 
-; 無変換キーを離したら強制停止（安全策）Upが取れないことが多い
-*vk1D Up:: {
-    lastPress.Clear()
-    MoveMouseStop()
-    OutputDebug "vk1D Up"
-}
-
 ; Alt+Tabの画面でも hjklでカーソル移動
 #HotIf WinActive("ahk_class XamlExplorerHostIslandWindow")
 *sc023:: Send "{Blind}{Left}"   ; h
@@ -338,10 +367,21 @@ MouseClickUp(key := "", button := "Left") {
     O             :   ? , ~
     N             :   { , [
     M             :   } , ]
+    D             :   BS , Del
+    Space         :   Enter
     )"
     ToolTip(helpText, , , ID_HELP)
     SetTimer () => ToolTip("", , , ID_HELP), -5000 ; 5秒後に消す
 }
+
+; Space -> Enter
+*Space:: SendInput("{Blind}{Enter}")
+
+; D/Shift+D -> Backspace/Del
+*d:: SendInput("{Backspace}")
+^d:: SendInput("^{Backspace}")
++d:: SendInput("{Del}")
+^+d:: SendInput("^{Del}")
 
 ; H/Shift+H -> ;/:
 *sc023:: {
@@ -410,18 +450,49 @@ MouseClickUp(key := "", button := "Left") {
 #HotIf
 
 ;-----------------------------------------------------------------
-; 変換換キー(vk1C)の制御
-; 単独押下は無効、ダブルクリックで変換キーとして機能
+; 無変換キー(vk1D)の制御
+; 単独押下は無効、ダブルクリックでIMEをOFF
+;-----------------------------------------------------------------
+vk1D:: {
+    KeyWait "vk1D"
+
+    ; --- ここで安全策（Up時の処理）を実行 ---
+    lastPress.Clear()
+    MoveMouseStop()
+
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
+        SetIMEState(0)
+        ShowIMEToolTip(1) ; Show "A"
+    }
+}
+F13:: {
+    KeyWait "F13"
+
+    ; --- ここで安全策（Up時の処理）を実行 ---
+    lastPress.Clear()
+    MoveMouseStop()
+
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
+        SetIMEState(0)
+        ShowIMEToolTip(1) ; Show "A"
+    }
+}
+
+;-----------------------------------------------------------------
+; 変換キー(vk1C)の制御
+; 単独押下は無効、ダブルクリックでIMEをOn
 ;-----------------------------------------------------------------
 vk1C:: {
     KeyWait "vk1C"
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 300) {
-        Send "{vk1C}"
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
+        SetIMEState(1)
+        ShowIMEToolTip(0) ; Show "あ"
     }
 }
 F14:: {
     KeyWait "F14"
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 300) {
-        Send "{vk1C}"
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
+        SetIMEState(1)
+        ShowIMEToolTip(0) ; Show "あ"
     }
 }
