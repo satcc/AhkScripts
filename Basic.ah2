@@ -41,9 +41,6 @@ SetTransparent(x) {
     Send FormatTime(, "yyyy/MM/dd(ddd) hh:mm:ss")
 }
 
-;-----------------------------------------------------------------
-#HotIf GetKeyState("vk1D", "P") || GetKeyState("F13", "P") ; 無変換キーが押されている間だけ有効
-
 ; 矢印キーでマウス移動
 global mouseIsDclick := false
 global mouseMoveCounter := 0
@@ -176,6 +173,10 @@ SetIMEState(state) {
     ShowIMEToolTip(state)
 }
 
+;-----------------------------------------------------------------
+; 無変換, F13 キーが押されている間だけ有効
+#HotIf GetKeyState("vk1D", "P") || GetKeyState("F13", "P")
+
 *F1:: {
     helpText := "
     (LTrim
@@ -194,10 +195,10 @@ SetIMEState(state) {
 }
 
 ;vi風キー割り当て　(alt+Tabの操作と競合しないようにScanCodeで記述)
-*sc023:: SendInput("{Blind}{Left}")   ; 無変換+h → 左
-*sc024:: SendInput("{Blind}{Down}")   ; 無変換+j → 下
-*sc025:: SendInput("{Blind}{Up}")     ; 無変換+k → 上
-*sc026:: SendInput("{Blind}{Right}")  ; 無変換+l → 右
+*h:: SendInput("{Blind}{Left}")   ; 無変換+h → 左
+*j:: SendInput("{Blind}{Down}")   ; 無変換+j → 下
+*k:: SendInput("{Blind}{Up}")     ; 無変換+k → 上
+*l:: SendInput("{Blind}{Right}")  ; 無変換+l → 右
 
 ;Home/End/PageUp/PageDownキーを割り当て
 *n:: SendInput("{Blind}{Home}")
@@ -368,15 +369,14 @@ MouseClickUp(key := "", button := "Left") {
 
 ; Alt+Tabの画面でも hjklでカーソル移動
 #HotIf WinActive("ahk_class XamlExplorerHostIslandWindow")
-*sc023:: Send "{Blind}{Left}"   ; h
-*sc024:: Send "{Blind}{Down}"   ; j
-*sc025:: Send "{Blind}{Up}"     ; k
-*sc026:: Send "{Blind}{Right}"  ; l
+*h:: Send "{Blind}{Left}"   ; h
+*j:: Send "{Blind}{Down}"   ; j
+*k:: Send "{Blind}{Up}"     ; k
+*l:: Send "{Blind}{Right}"  ; l
 #HotIf
 
 ;-----------------------------------------------------------------
-; 変換キー(vk1C) + キー で記号入力
-;-----------------------------------------------------------------
+; 変換(vk1C), F14 キーが押されている間だけ有効
 #HotIf GetKeyState("vk1C", "P") || GetKeyState("F14", "P")
 
 *F1:: {
@@ -407,7 +407,7 @@ MouseClickUp(key := "", button := "Left") {
 ^+d:: SendInput("^{Del}")
 
 ; H/Shift+H -> ;/:
-*sc023:: {
+*h:: {
     if GetKeyState("Shift", "P")
         SendInput("{Blind}{Text}:")
     else
@@ -415,7 +415,7 @@ MouseClickUp(key := "", button := "Left") {
 }
 
 ; J/Shift+J -> +/=
-*sc024:: {
+*j:: {
     if GetKeyState("Shift", "P")
         SendInput("{Blind}{=}")
     else
@@ -423,7 +423,7 @@ MouseClickUp(key := "", button := "Left") {
 }
 
 ; K/Shift+K -> -/_
-*sc025:: {
+*k:: {
     if GetKeyState("Shift", "P")
         SendInput("{Blind}{_}")
     else
@@ -470,12 +470,43 @@ MouseClickUp(key := "", button := "Left") {
         SendInput("{Blind}{Text}}")
 }
 
-#HotIf
+#HotIf ; 変換キー(vk1C/F14)が押されている間だけ有効
+;-----------------------------------------------------------------
+
+;-----------------------------------------------------------------
+; かな(vkF2),F16が押されている間だけ有効
+#HotIf GetKeyState("vkF2", "P") || GetKeyState("F16", "P")
+
+*n:: SendInput("{Blind}{0}")
+*m:: SendInput("{Blind}{1}")
+*,:: SendInput("{Blind}{2}")
+*.:: SendInput("{Blind}{3}")
+*j:: SendInput("{Blind}{4}")
+*k:: SendInput("{Blind}{5}")
+*l:: SendInput("{Blind}{6}")
+*u:: SendInput("{Blind}{7}")
+*i:: SendInput("{Blind}{8}")
+*o:: SendInput("{Blind}{9}")
+*p:: SendInput("{Blind}{0}")
+
+*z:: SendInput("{Blind}{0}")
+*x:: SendInput("{Blind}{1}")
+*c:: SendInput("{Blind}{2}")
+*v:: SendInput("{Blind}{3}")
+*s:: SendInput("{Blind}{4}")
+*d:: SendInput("{Blind}{5}")
+*f:: SendInput("{Blind}{6}")
+*w:: SendInput("{Blind}{7}")
+*e:: SendInput("{Blind}{8}")
+*r:: SendInput("{Blind}{9}")
+
+#HotIf ; かなキー(vkF2),F16が押されている間だけ有効
+;-----------------------------------------------------------------
 
 ; =================================================================
 ; 設定値 (Configuration)
 ; =================================================================
-DOUBLE_CLICK_TIME := 450
+DOUBLE_CLICK_TIME := 450 ; ダブルクリック時間
 
 ;-----------------------------------------------------------------
 ; キーハンドラー共通関数
@@ -496,8 +527,7 @@ HandleKeyDoubleClick(keyName, clickAction) {
 
 ;-----------------------------------------------------------------
 ; 無変換キー(vk1D/F13)の制御
-; 単独押下は無効、ダブルクリックでIMEをOFF
-; キーUpでマウス移動停止（安全策）
+; 単独押下は無効、ダブルクリックでIMEをOFF [キーUpでマウス移動停止（安全策）]
 ;-----------------------------------------------------------------
 vk1D:: HandleKeyDoubleClick("vk1D", () => (SetIMEState(0)))
 F13:: HandleKeyDoubleClick("F13", () => (SetIMEState(0)))
