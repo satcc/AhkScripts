@@ -53,6 +53,26 @@ global ID_MOUSE := 10
 global ID_HELP := 11
 global ID_IME := 12
 
+; キャレット位置を取得してToolTipを表示
+ShowToolTip(tipText, id, showTimeSec) {
+    ; キャレット位置を取得
+    try {
+        CaretGetPos(&x, &y)
+        ; キャレットの少し下に表示
+        tipX := x
+        tipY := y + 20
+    } catch {
+        ; キャレット位置が取得できない場合はマウス位置を使用
+        MouseGetPos(&tipX, &tipY)
+        tipY += 20
+    }
+
+    ; ToolTipを表示
+    ToolTip(tipText, tipX, tipY, id)
+    ; showTimeMSec後に消す
+    SetTimer(() => ToolTip("", , , id), -showTimeSec * 1000)
+}
+
 ; IMEの状態を取得する関数（改善版）
 GetIMEState() {
     ; 現在のDetectHiddenWindows設定を保存し、Trueにする（IMEウィンドウ操作に必要）
@@ -109,34 +129,14 @@ GetIMEState() {
 global lastIMEState := 0
 
 ; キャレット位置を取得してToolTipを表示（切り替え前の状態を受け取る）
-ShowIMEToolTip(beforeState) {
+ShowIMEToolTip(imeState) {
     global ID_IME
 
-    ; キャレット位置を取得
-    try {
-        CaretGetPos(&x, &y)
-        ; キャレットの少し下に表示
-        tipX := x
-        tipY := y + 20
-    } catch {
-        ; キャレット位置が取得できない場合はマウス位置を使用
-        MouseGetPos(&tipX, &tipY)
-        tipY += 20
-    }
-
-    ; 切り替え後の状態は、切り替え前の状態の反転
-    afterState := !beforeState
-
-    ; デバッグ用：状態をOutputDebugで出力
-    OutputDebug("IME Before: " . beforeState . " After: " . afterState)
-
     ; IMEがON（日本語モード）なら「あ」、OFF（英語モード）なら「A」
-    tipText := afterState ? "あ" : "A"
+    tipText := imeState ? "あ" : "A"
 
-    ; ToolTipを表示
-    ToolTip(tipText, tipX, tipY, ID_IME)
-    ; 1秒後に消す
-    SetTimer(() => ToolTip("", , , ID_IME), -1000)
+    ; 共通関数を使ってToolTipを表示 (1秒)
+    ShowToolTip(tipText, ID_IME, 1)
 }
 
 SetIMEState(state) {
@@ -151,6 +151,8 @@ SetIMEState(state) {
     try {
         SendMessage(0x283, 0x006, state, , DefaultIMEWnd)
     }
+
+    ShowIMEToolTip(state)
 }
 
 *F1:: {
@@ -208,8 +210,8 @@ Space:: {
     beforeState := GetIMEState()
     ; IMEを切り替え
     SendInput("{vkF3}")
-    ; ToolTipを表示（切り替え前の状態を渡す）
-    ShowIMEToolTip(beforeState)
+    ; ToolTipを表示
+    ShowIMEToolTip(!beforeState)
 }
 
 ; Z-> Escape
@@ -449,50 +451,39 @@ MouseClickUp(key := "", button := "Left") {
 
 #HotIf
 
+; =================================================================
+; 設定値 (Configuration)
+; =================================================================
+DOUBLE_CLICK_TIME := 450
+
 ;-----------------------------------------------------------------
-; 無変換キー(vk1D)の制御
+; キーハンドラー共通関数
+;-----------------------------------------------------------------
+HandleKeyDoubleClick(keyName, clickAction) {
+    KeyWait keyName
+
+    ; 共通の安全策（マウス移動停止）
+    if keyName = "vk1D" || keyName = "F13" {
+        lastPress.Clear()
+        MoveMouseStop()
+    }
+
+    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < DOUBLE_CLICK_TIME) {
+        clickAction()
+    }
+}
+
+;-----------------------------------------------------------------
+; 無変換キー(vk1D/F13)の制御
 ; 単独押下は無効、ダブルクリックでIMEをOFF
+; キーUpでマウス移動停止（安全策）
 ;-----------------------------------------------------------------
-vk1D:: {
-    KeyWait "vk1D"
-
-    ; --- ここで安全策（Up時の処理）を実行 ---
-    lastPress.Clear()
-    MoveMouseStop()
-
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
-        SetIMEState(0)
-        ShowIMEToolTip(1) ; Show "A"
-    }
-}
-F13:: {
-    KeyWait "F13"
-
-    ; --- ここで安全策（Up時の処理）を実行 ---
-    lastPress.Clear()
-    MoveMouseStop()
-
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
-        SetIMEState(0)
-        ShowIMEToolTip(1) ; Show "A"
-    }
-}
+vk1D:: HandleKeyDoubleClick("vk1D", () => (SetIMEState(0)))
+F13:: HandleKeyDoubleClick("F13", () => (SetIMEState(0)))
 
 ;-----------------------------------------------------------------
-; 変換キー(vk1C)の制御
-; 単独押下は無効、ダブルクリックでIMEをOn
+; 変換キー(vk1C/F14)の制御
+; 単独押下は無効、ダブルクリックでIMEをON
 ;-----------------------------------------------------------------
-vk1C:: {
-    KeyWait "vk1C"
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
-        SetIMEState(1)
-        ShowIMEToolTip(0) ; Show "あ"
-    }
-}
-F14:: {
-    KeyWait "F14"
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < 450) {
-        SetIMEState(1)
-        ShowIMEToolTip(0) ; Show "あ"
-    }
-}
+vk1C:: HandleKeyDoubleClick("vk1C", () => (SetIMEState(1)))
+F14:: HandleKeyDoubleClick("F14", () => (SetIMEState(1)))
