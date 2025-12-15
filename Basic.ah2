@@ -140,18 +140,39 @@ ShowIMEToolTip(imeState) {
 }
 
 SetIMEState(state) {
+    ; 現在のDetectHiddenWindows設定を保存し、Trueにする
+    dhw := A_DetectHiddenWindows
+    DetectHiddenWindows(true)
+
     hwnd := WinGetID("A")
     if (!hwnd) {
+        DetectHiddenWindows(dhw)
         return
     }
+
+    ; 本当にフォーカスを持っているウィンドウ（コントロール）を取得
+    cbSize := 24 + 6 * A_PtrSize
+    gti := Buffer(cbSize, 0)
+    NumPut("UInt", cbSize, gti, 0)
+
+    if DllCall("GetGUIThreadInfo", "UInt", 0, "Ptr", gti.Ptr) {
+        hwndFocus := NumGet(gti, 8 + A_PtrSize, "Ptr")
+        if (hwndFocus) {
+            hwnd := hwndFocus
+        }
+    }
+
     DefaultIMEWnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
     if (!DefaultIMEWnd) {
+        DetectHiddenWindows(dhw)
         return
     }
+
     try {
         SendMessage(0x283, 0x006, state, , DefaultIMEWnd)
     }
 
+    DetectHiddenWindows(dhw)
     ShowIMEToolTip(state)
 }
 
