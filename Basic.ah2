@@ -477,17 +477,16 @@ MouseClickUp(key := "", button := "Left") {
 ; かな(vkF2),F16が押されている間だけ有効
 #HotIf GetKeyState("vkF2", "P") || GetKeyState("F16", "P")
 
-*n:: SendInput("{Blind}{0}")
-*m:: SendInput("{Blind}{1}")
-*,:: SendInput("{Blind}{2}")
-*.:: SendInput("{Blind}{3}")
-*j:: SendInput("{Blind}{4}")
-*k:: SendInput("{Blind}{5}")
-*l:: SendInput("{Blind}{6}")
-*u:: SendInput("{Blind}{7}")
-*i:: SendInput("{Blind}{8}")
-*o:: SendInput("{Blind}{9}")
-*p:: SendInput("{Blind}{0}")
+*,:: SendInput("{Blind}{0}")
+*.:: SendInput("{Blind}{1}")
+*/:: SendInput("{Blind}{2}")
+*sc073:: SendInput("{Blind}{3}")  ; \
+*l:: SendInput("{Blind}{4}")
+*sc027:: SendInput("{Blind}{5}")  ; ;
+*sc028:: SendInput("{Blind}{6}")  ; :
+*o:: SendInput("{Blind}{7}")
+*p:: SendInput("{Blind}{8}")
+*@:: SendInput("{Blind}{9}")
 
 *z:: SendInput("{Blind}{0}")
 *x:: SendInput("{Blind}{1}")
