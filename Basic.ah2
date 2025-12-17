@@ -488,6 +488,12 @@ MouseClickUp(key := "", button := "Left") {
 *p:: SendInput("{Blind}{8}")
 *@:: SendInput("{Blind}{9}")
 
+*[:: SendInput("{Blind}{-}")
+*]:: SendInput("{Blind}{+}")
+*i:: SendInput("{Blind}{/}")
+*k:: SendInput("{Blind}{*}")
+*-:: SendInput("{Blind}{=}")
+
 *z:: SendInput("{Blind}{0}")
 *x:: SendInput("{Blind}{1}")
 *c:: SendInput("{Blind}{2}")
