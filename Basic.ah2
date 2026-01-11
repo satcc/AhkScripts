@@ -516,30 +516,39 @@ DOUBLE_CLICK_TIME := 450 ; ダブルクリック時間
 ;-----------------------------------------------------------------
 ; キーハンドラー共通関数
 ;-----------------------------------------------------------------
-HandleKeyDoubleClick(keyName, clickAction) {
+; 短押し（250ms以内）でIME切り替えを行う共通関数
+HandleKeyShortPress(keyName, imeState) {
+    ; 押下開始時刻を記録
+    pressTime := A_TickCount
+
+    ; キーが離されるまで待機
     KeyWait keyName
 
-    ; 共通の安全策（マウス移動停止）
-    if keyName = "vk1D" || keyName = "F13" {
+    ; 無変換キーの場合はマウス移動停止（安全策）
+    if (keyName = "vk1D" || keyName = "F13") {
         lastPress.Clear()
         MoveMouseStop()
     }
 
-    if (A_PriorHotkey == A_ThisHotkey && A_TimeSincePriorHotkey < DOUBLE_CLICK_TIME) {
-        clickAction()
+    ; 押下時間を計算（ミリ秒）
+    pressDuration := A_TickCount - pressTime
+
+    ; 250ms以内の短押しの場合のみIME切り替え
+    if (pressDuration <= 250) {
+        SetIMEState(imeState)
     }
 }
 
 ;-----------------------------------------------------------------
 ; 無変換キー(vk1D/F13)の制御
-; 単独押下は無効、ダブルクリックでIMEをOFF [キーUpでマウス移動停止（安全策）]
+; 短押しでIMEをOFF、長押しは修飾キーとして機能 [キーUpでマウス移動停止（安全策）]
 ;-----------------------------------------------------------------
-vk1D:: HandleKeyDoubleClick("vk1D", () => (SetIMEState(0)))
-F13:: HandleKeyDoubleClick("F13", () => (SetIMEState(0)))
+vk1D:: HandleKeyShortPress("vk1D", 0)
+F13:: HandleKeyShortPress("F13", 0)
 
 ;-----------------------------------------------------------------
 ; 変換キー(vk1C/F14)の制御
-; 単独押下は無効、ダブルクリックでIMEをON
+; 短押しでIMEをON、長押しは修飾キーとして機能
 ;-----------------------------------------------------------------
-vk1C:: HandleKeyDoubleClick("vk1C", () => (SetIMEState(1)))
-F14:: HandleKeyDoubleClick("F14", () => (SetIMEState(1)))
+vk1C:: HandleKeyShortPress("vk1C", 1)
+F14:: HandleKeyShortPress("F14", 1)
