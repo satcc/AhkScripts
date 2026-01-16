@@ -524,7 +524,7 @@ HandleKeyShortPress(keyName, imeState) {
     ; キーが離されるまで待機
     KeyWait keyName
 
-    ; 無変換キーの場合はマウス移動停止（安全策）
+    ; クリーンアップ（キーUpのタイミングで実行）
     if (keyName = "vk1D" || keyName = "F13") {
         lastPress.Clear()
         MoveMouseStop()
@@ -533,8 +533,8 @@ HandleKeyShortPress(keyName, imeState) {
     ; 押下時間を計算（ミリ秒）
     pressDuration := A_TickCount - pressTime
 
-    ; 250ms以内の短押しの場合のみIME切り替え
-    if (pressDuration <= 250) {
+    ; 他のキーが押されておらず、かつ短押し（250ms以内）の場合のみIME切り替え
+    if (A_PriorKey = keyName && pressDuration <= 250) {
         SetIMEState(imeState)
     }
 }
@@ -543,12 +543,12 @@ HandleKeyShortPress(keyName, imeState) {
 ; 無変換キー(vk1D/F13)の制御
 ; 短押しでIMEをOFF、長押しは修飾キーとして機能 [キーUpでマウス移動停止（安全策）]
 ;-----------------------------------------------------------------
-vk1D:: HandleKeyShortPress("vk1D", 0)
-F13:: HandleKeyShortPress("F13", 0)
+~vk1D:: HandleKeyShortPress("vk1D", 0)
+~F13:: HandleKeyShortPress("F13", 0)
 
 ;-----------------------------------------------------------------
 ; 変換キー(vk1C/F14)の制御
 ; 短押しでIMEをON、長押しは修飾キーとして機能
 ;-----------------------------------------------------------------
-vk1C:: HandleKeyShortPress("vk1C", 1)
-F14:: HandleKeyShortPress("F14", 1)
+~vk1C:: HandleKeyShortPress("vk1C", 1)
+~F14:: HandleKeyShortPress("F14", 1)
