@@ -137,40 +137,22 @@ ShowIMEToolTip(imeState) {
 }
 
 SetIMEState(state) {
-    ; 現在のDetectHiddenWindows設定を保存し、Trueにする
-    dhw := A_DetectHiddenWindows
-    DetectHiddenWindows(true)
+    state := !!state
 
-    hwnd := WinGetID("A")
-    if (!hwnd) {
-        DetectHiddenWindows(dhw)
-        return
+    ; Windows標準のIME_ON/IME_OFFキーを送り、IME自身に状態変更させる
+    SendInput(state ? "{vk16}" : "{vk1A}")
+    Sleep(50)
+
+    actualState := GetIMEState()
+    if (actualState = state) {
+        ShowIMEToolTip(actualState)
+        return true
     }
 
-    ; 本当にフォーカスを持っているウィンドウ（コントロール）を取得
-    cbSize := 24 + 6 * A_PtrSize
-    gti := Buffer(cbSize, 0)
-    NumPut("UInt", cbSize, gti, 0)
-
-    if DllCall("GetGUIThreadInfo", "UInt", 0, "Ptr", gti.Ptr) {
-        hwndFocus := NumGet(gti, 8 + A_PtrSize, "Ptr")
-        if (hwndFocus) {
-            hwnd := hwndFocus
-        }
-    }
-
-    DefaultIMEWnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
-    if (!DefaultIMEWnd) {
-        DetectHiddenWindows(dhw)
-        return
-    }
-
-    try {
-        SendMessage(0x283, 0x006, state, , DefaultIMEWnd)
-    }
-
-    DetectHiddenWindows(dhw)
-    ShowIMEToolTip(state)
+    OutputDebug("SetIMEState: IME key event did not reach requested state. requested="
+        . state . " actual=" . actualState)
+    ShowToolTip("IME切替確認失敗", ID_IME, 2)
+    return false
 }
 
 ;-----------------------------------------------------------------
@@ -226,15 +208,12 @@ d:: SendInput("{Backspace}")
 ; O → Enter
 *o:: SendInput("{Blind}{Enter}")
 
-; Space -> IME切り替え
-Space:: {
-    ; 切り替え前のIME状態を取得
-    beforeState := GetIMEState()
-    ; IMEを切り替え
-    SendInput("{vkF3}")
-    ; ToolTipを表示
-    ShowIMEToolTip(!beforeState)
-}
+; 無変換+Space -> IME切り替え（調査中のため一時無効化）
+; Space:: {
+;     beforeState := GetIMEState()
+;     SendInput("{vkF3}")
+;     ShowIMEToolTip(!beforeState)
+; }
 
 ; Z-> Escape
 z:: SendInput("{Esc}")
@@ -521,8 +500,19 @@ HandleKeyShortPress(keyName, imeState) {
     ; 押下開始時刻を記録
     pressTime := A_TickCount
 
+    ; 押下中に別のキーが使われたかを監視する
+    keyState := { vk: GetKeyVK(keyName), otherPressed: false }
+    keyWatcher := InputHook("V L0")
+    keyWatcher.KeyOpt("{All}", "N")
+    keyWatcher.OnKeyDown := (hook, vk, sc) => (vk != keyState.vk && (keyState.otherPressed := true))
+    keyWatcher.Start()
+
     ; キーが離されるまで待機
-    KeyWait keyName
+    try {
+        KeyWait keyName
+    } finally {
+        keyWatcher.Stop()
+    }
 
     ; クリーンアップ（キーUpのタイミングで実行）
     if (keyName = "vk1D" || keyName = "F13") {
@@ -533,8 +523,8 @@ HandleKeyShortPress(keyName, imeState) {
     ; 押下時間を計算（ミリ秒）
     pressDuration := A_TickCount - pressTime
 
-    ; 他のキーが押されておらず、かつ短押し（250ms以内）の場合のみIME切り替え
-    if (A_PriorKey = keyName && pressDuration <= 250) {
+    ; 他のキーが押されておらず、かつ短押しの場合のみIME切り替え
+    if (!keyState.otherPressed && pressDuration <= 250) {
         SetIMEState(imeState)
     }
 }

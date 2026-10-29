@@ -44,6 +44,9 @@ Windows のレジストリ (`Scancode Map`) を使用して、あまり使わな
     *   IME ON/OFF 時にカーソルそばにツールチップで状態を表示 (`あ` / `A`)
 *   **F14 (Single Press)**: 
     *   Mac の「かな」キーのように、F14 単独押しで IME ON (または特定の機能) を割り当て可能
+*   **F13 (Single Press)**:
+    *   F13 単独押しで IME OFF
+* F13/F14 は、押下時間が250ms以内で他のキーを押さなかった場合に切り替わります。
 
 #### Other Shortcuts
 *   **O**: Enter
