@@ -500,19 +500,8 @@ HandleKeyShortPress(keyName, imeState) {
     ; 押下開始時刻を記録
     pressTime := A_TickCount
 
-    ; 押下中に別のキーが使われたかを監視する
-    keyState := { vk: GetKeyVK(keyName), otherPressed: false }
-    keyWatcher := InputHook("V L0")
-    keyWatcher.KeyOpt("{All}", "N")
-    keyWatcher.OnKeyDown := (hook, vk, sc) => (vk != keyState.vk && (keyState.otherPressed := true))
-    keyWatcher.Start()
-
     ; キーが離されるまで待機
-    try {
-        KeyWait keyName
-    } finally {
-        keyWatcher.Stop()
-    }
+    KeyWait keyName
 
     ; クリーンアップ（キーUpのタイミングで実行）
     if (keyName = "vk1D" || keyName = "F13") {
@@ -523,8 +512,17 @@ HandleKeyShortPress(keyName, imeState) {
     ; 押下時間を計算（ミリ秒）
     pressDuration := A_TickCount - pressTime
 
+    ; 離された時点で最後に押されたキーを確認する（F13/vk1D等の別名を考慮）
+    priorKey := A_PriorKey
+    isOnlyKey := (priorKey = keyName)
+    if (keyName = "vk1D" || keyName = "F13") {
+        isOnlyKey := (priorKey = "vk1D" || priorKey = "F13")
+    } else if (keyName = "vk1C" || keyName = "F14") {
+        isOnlyKey := (priorKey = "vk1C" || priorKey = "F14")
+    }
+
     ; 他のキーが押されておらず、かつ短押しの場合のみIME切り替え
-    if (!keyState.otherPressed && pressDuration <= 250) {
+    if (isOnlyKey && pressDuration <= 250) {
         SetIMEState(imeState)
     }
 }
